@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Jobs - Placement Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="bg-gray-50">
+  <header class="bg-white shadow">
+    <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+      <h1 class="text-xl font-semibold">Jobs</h1>
+      <nav>
+        <a href="/login.html" class="text-blue-600">Login</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container mx-auto px-4 py-8">
+    <div id="jobsList" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+  </main>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/jobs.js"></script>
+</body>
+</html>
