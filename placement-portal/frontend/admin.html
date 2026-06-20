@@ -3,44 +3,472 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Admin - Placement Portal</title>
+  <title>Admin Dashboard - Placement Portal</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body class="bg-gray-50">
+<body class="bg-gray-50 min-h-screen">
   <script>
-    window.USE_FIXTURES = true;
+    window.USE_FIXTURES = false; // hit the live Express API
   </script>
   <script type="module">
-    import { renderNavbar } from '/js/ui.js';
-    import { apiGet } from '/js/api.js';
+    import { renderNavbar, showToast } from '/js/ui.js';
+    import { apiGet, apiPost, apiPut, apiDelete, getToken } from '/js/api.js';
     renderNavbar('body');
+
+    // Secure the page client-side
+    const token = getToken();
+    let isAdmin = false;
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        isAdmin = payload.role === 'admin';
+      } catch (e) {}
+    }
+    if (!isAdmin) {
+      showToast('Access denied: Placement Officer credentials required', 'error');
+      setTimeout(() => { window.location = '/login.html'; }, 1500);
+    }
 
     const container = document.createElement('main');
     container.className = 'container mx-auto px-4 py-8';
     container.innerHTML = `
-      <h1 class="text-2xl font-semibold mb-4">Admin Dashboard</h1>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="bg-white p-4 rounded shadow">
-          <h3 class="font-semibold">Companies</h3>
-          <div id="companies"></div>
-        </div>
-        <div class="bg-white p-4 rounded shadow">
-          <h3 class="font-semibold">Jobs</h3>
-          <div id="jobs"></div>
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-800">Placement Officer Dashboard</h1>
+          <p class="text-sm text-gray-600">Manage companies, job postings, and candidate applications</p>
         </div>
       </div>
+
+      <!-- Navigation Tabs -->
+      <div class="flex flex-wrap border-b border-gray-200 mb-8 gap-2">
+        <button id="tabBtnOverview" class="px-5 py-3 font-medium text-blue-600 border-b-2 border-blue-600 focus:outline-none transition-colors"><i class="fa-solid fa-chart-line mr-2"></i>Overview</button>
+        <button id="tabBtnCompanies" class="px-5 py-3 font-medium text-gray-500 border-b-2 border-transparent hover:text-gray-700 hover:border-gray-300 focus:outline-none transition-colors"><i class="fa-solid fa-building mr-2"></i>Companies</button>
+        <button id="tabBtnJobs" class="px-5 py-3 font-medium text-gray-500 border-b-2 border-transparent hover:text-gray-700 hover:border-gray-300 focus:outline-none transition-colors"><i class="fa-solid fa-briefcase mr-2"></i>Jobs</button>
+        <button id="tabBtnApplications" class="px-5 py-3 font-medium text-gray-500 border-b-2 border-transparent hover:text-gray-700 hover:border-gray-300 focus:outline-none transition-colors"><i class="fa-solid fa-file-invoice mr-2"></i>Applications</button>
+      </div>
+
+      <!-- Tab Content Area -->
+      <div id="tabContent"></div>
     `;
     document.body.appendChild(container);
 
-    async function renderAdmin() {
-      const companies = await apiGet('/company');
-      const jobs = await apiGet('/jobs');
-      document.getElementById('companies').innerHTML = (companies || []).map(c => `<div class="py-2 border-b">${c.companyName}</div>`).join('');
-      document.getElementById('jobs').innerHTML = (jobs || []).map(j => `<div class="py-2 border-b">${j.title}</div>`).join('');
+    let companies = [];
+    let jobs = [];
+    let students = [];
+    let applications = [];
+
+    // Cache load function
+    async function loadData() {
+      try {
+        companies = await apiGet('/company') || [];
+        const resJobs = await apiGet('/jobs') || {};
+        jobs = resJobs.data || [];
+        students = await apiGet('/admin/students') || [];
+        applications = await apiGet('/admin/applications') || [];
+      } catch (err) {
+        showToast('Error loading dashboard data', 'error');
+      }
     }
 
-    renderAdmin();
+    // Switch Tabs helper
+    function setTabActive(activeId) {
+      const tabs = [
+        { id: 'Overview', btn: document.getElementById('tabBtnOverview') },
+        { id: 'Companies', btn: document.getElementById('tabBtnCompanies') },
+        { id: 'Jobs', btn: document.getElementById('tabBtnJobs') },
+        { id: 'Applications', btn: document.getElementById('tabBtnApplications') }
+      ];
+
+      tabs.forEach(t => {
+        if (t.id === activeId) {
+          t.btn.className = 'px-5 py-3 font-medium text-blue-600 border-b-2 border-blue-600 focus:outline-none transition-colors';
+        } else {
+          t.btn.className = 'px-5 py-3 font-medium text-gray-500 border-b-2 border-transparent hover:text-gray-700 hover:border-gray-300 focus:outline-none transition-colors';
+        }
+      });
+    }
+
+    // Render 1. OVERVIEW
+    async function renderOverview() {
+      setTabActive('Overview');
+      await loadData();
+      const content = document.getElementById('tabContent');
+      content.innerHTML = `
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <!-- Companies Card -->
+          <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex items-center">
+            <div class="p-3 rounded-full bg-blue-50 text-blue-600 mr-4">
+              <i class="fa-solid fa-building fa-2xl"></i>
+            </div>
+            <div>
+              <div class="text-sm font-medium text-gray-500">Companies</div>
+              <div class="text-2xl font-bold text-gray-800">${companies.length}</div>
+            </div>
+          </div>
+          <!-- Jobs Card -->
+          <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex items-center">
+            <div class="p-3 rounded-full bg-green-50 text-green-600 mr-4">
+              <i class="fa-solid fa-briefcase fa-2xl"></i>
+            </div>
+            <div>
+              <div class="text-sm font-medium text-gray-500">Job Postings</div>
+              <div class="text-2xl font-bold text-gray-800">${jobs.length}</div>
+            </div>
+          </div>
+          <!-- Applications Card -->
+          <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex items-center">
+            <div class="p-3 rounded-full bg-purple-50 text-purple-600 mr-4">
+              <i class="fa-solid fa-file-invoice fa-2xl"></i>
+            </div>
+            <div>
+              <div class="text-sm font-medium text-gray-500">Applications</div>
+              <div class="text-2xl font-bold text-gray-800">${applications.length}</div>
+            </div>
+          </div>
+          <!-- Students Card -->
+          <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex items-center">
+            <div class="p-3 rounded-full bg-yellow-50 text-yellow-600 mr-4">
+              <i class="fa-solid fa-graduation-cap fa-2xl"></i>
+            </div>
+            <div>
+              <div class="text-sm font-medium text-gray-500">Registered Students</div>
+              <div class="text-2xl font-bold text-gray-800">${students.length}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+            <h3 class="font-bold text-gray-800 mb-4">Recent Company Additions</h3>
+            <div class="divide-y divide-gray-100">
+              ${companies.slice(-5).reverse().map(c => `
+                <div class="py-3 flex justify-between items-center">
+                  <div>
+                    <span class="font-semibold text-gray-800">${c.companyName}</span>
+                    <div class="text-xs text-gray-500">${c.website || ''}</div>
+                  </div>
+                  <span class="text-xs text-gray-400">${new Date(c.createdAt).toLocaleDateString()}</span>
+                </div>
+              `).join('') || '<p class="text-gray-500 py-4 text-center">No companies added yet.</p>'}
+            </div>
+          </div>
+
+          <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+            <h3 class="font-bold text-gray-800 mb-4">Recent Job Openings</h3>
+            <div class="divide-y divide-gray-100">
+              ${jobs.slice(-5).reverse().map(j => {
+                const comp = companies.find(c => c.id === j.companyId) || {};
+                return `
+                  <div class="py-3 flex justify-between items-center">
+                    <div>
+                      <span class="font-semibold text-gray-800">${j.title}</span>
+                      <div class="text-xs text-gray-500">${comp.companyName || ''} • ${j.location || ''}</div>
+                    </div>
+                    <span class="text-sm font-medium text-green-600">${j.salary || ''}</span>
+                  </div>
+                `;
+              }).join('') || '<p class="text-gray-500 py-4 text-center">No jobs posted yet.</p>'}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Render 2. COMPANIES
+    async function renderCompanies() {
+      setTabActive('Companies');
+      await loadData();
+      const content = document.getElementById('tabContent');
+      content.innerHTML = `
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <!-- Company Form Card -->
+          <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 h-fit">
+            <h3 class="text-lg font-bold text-gray-800 mb-4">Add New Company</h3>
+            <form id="companyForm" class="space-y-4">
+              <div>
+                <label class="block mb-1 text-sm font-medium text-gray-700">Company Name</label>
+                <input id="companyName" type="text" required class="w-full border p-2 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none" />
+              </div>
+              <div>
+                <label class="block mb-1 text-sm font-medium text-gray-700">Website</label>
+                <input id="website" type="url" placeholder="https://" class="w-full border p-2 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none" />
+              </div>
+              <div>
+                <label class="block mb-1 text-sm font-medium text-gray-700">Description</label>
+                <textarea id="description" rows="3" class="w-full border p-2 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none"></textarea>
+              </div>
+              <div>
+                <label class="block mb-1 text-sm font-medium text-gray-700">Logo</label>
+                <input id="logo" type="file" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+              </div>
+              <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded transition-colors">Create Company</button>
+            </form>
+          </div>
+
+          <!-- Company List -->
+          <div class="lg:col-span-2 space-y-4">
+            <h3 class="text-lg font-bold text-gray-800 mb-2">Registered Companies</h3>
+            <div id="companyList" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              ${companies.map(c => `
+                <div class="bg-white p-5 rounded-lg shadow-sm border border-gray-100 flex flex-col justify-between">
+                  <div>
+                    <h4 class="font-bold text-gray-800 text-lg">${c.companyName}</h4>
+                    <p class="text-sm text-gray-600 mt-2 line-clamp-3">${c.description || 'No description provided.'}</p>
+                    <a href="${c.website || '#'}" target="_blank" class="text-xs text-blue-600 mt-3 inline-block hover:underline"><i class="fa-solid fa-globe mr-1"></i>Visit website</a>
+                  </div>
+                  <div class="mt-4 pt-3 border-t border-gray-50 flex justify-end">
+                    <button data-id="${c.id}" class="deleteCompanyBtn text-sm text-red-600 hover:text-red-700 font-medium px-2 py-1"><i class="fa-solid fa-trash mr-1"></i>Delete</button>
+                  </div>
+                </div>
+              `).join('') || '<div class="col-span-2 text-center text-gray-500 py-8 bg-white rounded-lg border border-dashed">No companies registered yet.</div>'}
+            </div>
+          </div>
+        </div>
+      `;
+
+      // Handle Submit Form
+      document.getElementById('companyForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const companyName = document.getElementById('companyName').value;
+        const website = document.getElementById('website').value;
+        const description = document.getElementById('description').value;
+        const logoFile = document.getElementById('logo').files[0];
+
+        let res;
+        if (logoFile) {
+          const form = new FormData();
+          form.append('companyName', companyName);
+          form.append('website', website);
+          form.append('description', description);
+          form.append('logo', logoFile);
+          res = await apiPost('/company', form, true);
+        } else {
+          res = await apiPost('/company', { companyName, website, description });
+        }
+
+        if (res.id) {
+          showToast('Company added successfully');
+          renderCompanies();
+        } else {
+          showToast(res.message || 'Error creating company', 'error');
+        }
+      });
+
+      // Handle Delete Company
+      document.querySelectorAll('.deleteCompanyBtn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          if (!confirm('Are you sure you want to delete this company? All associated jobs will remain but link to an invalid company.')) return;
+          const id = btn.getAttribute('data-id');
+          const res = await apiDelete('/company/' + id);
+          if (res.message === 'Deleted') {
+            showToast('Company deleted');
+            renderCompanies();
+          } else {
+            showToast(res.message || 'Failed to delete company', 'error');
+          }
+        });
+      });
+    }
+
+    // Render 3. JOBS
+    async function renderJobs() {
+      setTabActive('Jobs');
+      await loadData();
+      const content = document.getElementById('tabContent');
+      content.innerHTML = `
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <!-- Job Form Card -->
+          <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 h-fit">
+            <h3 class="text-lg font-bold text-gray-800 mb-4">Post New Job</h3>
+            <form id="jobForm" class="space-y-4">
+              <div>
+                <label class="block mb-1 text-sm font-medium text-gray-700">Company</label>
+                <select id="jobCompanyId" required class="w-full border p-2 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none bg-white">
+                  <option value="">Select a company</option>
+                  ${companies.map(c => `<option value="${c.id}">${c.companyName}</option>`).join('')}
+                </select>
+              </div>
+              <div>
+                <label class="block mb-1 text-sm font-medium text-gray-700">Job Title</label>
+                <input id="jobTitle" type="text" required class="w-full border p-2 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none" />
+              </div>
+              <div>
+                <label class="block mb-1 text-sm font-medium text-gray-700">Salary Package</label>
+                <input id="salary" type="text" placeholder="e.g. 6 LPA" required class="w-full border p-2 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none" />
+              </div>
+              <div>
+                <label class="block mb-1 text-sm font-medium text-gray-700">Job Location</label>
+                <input id="location" type="text" placeholder="e.g. Hyderabad / Remote" required class="w-full border p-2 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none" />
+              </div>
+              <div>
+                <label class="block mb-1 text-sm font-medium text-gray-700">Eligibility Criteria</label>
+                <input id="eligibility" type="text" placeholder="e.g. CS, IT, ECE with 8+ CGPA" required class="w-full border p-2 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none" />
+              </div>
+              <div>
+                <label class="block mb-1 text-sm font-medium text-gray-700">Application Deadline</label>
+                <input id="deadline" type="date" required class="w-full border p-2 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none" />
+              </div>
+              <div>
+                <label class="block mb-1 text-sm font-medium text-gray-700">Description</label>
+                <textarea id="jobDescription" rows="4" required class="w-full border p-2 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none"></textarea>
+              </div>
+              <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded transition-colors">Post Job Opening</button>
+            </form>
+          </div>
+
+          <!-- Job List -->
+          <div class="lg:col-span-2 space-y-4">
+            <h3 class="text-lg font-bold text-gray-800 mb-2">Current Job Postings</h3>
+            <div class="space-y-4">
+              ${jobs.map(j => {
+                const comp = companies.find(c => c.id === j.companyId) || {};
+                return `
+                  <div class="bg-white p-5 rounded-lg shadow-sm border border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                      <h4 class="font-bold text-gray-800 text-lg">${j.title}</h4>
+                      <div class="text-sm text-gray-600 font-medium mt-1">${comp.companyName || 'Unknown Company'} • ${j.location} • <span class="text-green-600 font-semibold">${j.salary}</span></div>
+                      <p class="text-xs text-gray-500 mt-2"><strong>Eligibility:</strong> ${j.eligibility}</p>
+                      <p class="text-xs text-gray-500"><strong>Deadline:</strong> ${new Date(j.deadline).toLocaleDateString()}</p>
+                    </div>
+                    <div class="flex items-center gap-2 border-t md:border-t-0 pt-3 md:pt-0">
+                      <button data-id="${j.id}" class="deleteJobBtn text-sm text-red-600 hover:text-red-700 font-medium px-3 py-1"><i class="fa-solid fa-trash mr-1"></i>Delete</button>
+                    </div>
+                  </div>
+                `;
+              }).join('') || '<div class="text-center text-gray-500 py-8 bg-white rounded-lg border border-dashed">No jobs posted yet.</div>'}
+            </div>
+          </div>
+        </div>
+      `;
+
+      // Handle Submit Form
+      document.getElementById('jobForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const companyId = document.getElementById('jobCompanyId').value;
+        const title = document.getElementById('jobTitle').value;
+        const salary = document.getElementById('salary').value;
+        const location = document.getElementById('location').value;
+        const eligibility = document.getElementById('eligibility').value;
+        const deadline = new Date(document.getElementById('deadline').value).toISOString();
+        const description = document.getElementById('jobDescription').value;
+
+        const res = await apiPost('/admin/job', { companyId, title, salary, location, eligibility, deadline, description });
+        if (res.id) {
+          showToast('Job posted successfully');
+          renderJobs();
+        } else {
+          showToast(res.message || 'Error posting job', 'error');
+        }
+      });
+
+      // Handle Delete Job
+      document.querySelectorAll('.deleteJobBtn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          if (!confirm('Are you sure you want to delete this job posting?')) return;
+          const id = btn.getAttribute('data-id');
+          const res = await apiDelete('/admin/job/' + id);
+          if (res.message === 'Deleted') {
+            showToast('Job posting deleted');
+            renderJobs();
+          } else {
+            showToast(res.message || 'Failed to delete job', 'error');
+          }
+        });
+      });
+    }
+
+    // Render 4. APPLICATIONS
+    async function renderApplications() {
+      setTabActive('Applications');
+      await loadData();
+      const content = document.getElementById('tabContent');
+      content.innerHTML = `
+        <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+          <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+            <h3 class="text-lg font-bold text-gray-800">Job Applications</h3>
+            <span class="text-xs px-2.5 py-1 rounded bg-blue-50 text-blue-700 font-bold uppercase tracking-wide">${applications.length} Total</span>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-gray-50 text-gray-500 text-xs font-semibold uppercase tracking-wider border-b border-gray-100">
+                  <th class="py-3 px-6">Student Details</th>
+                  <th class="py-3 px-6">Job Applied</th>
+                  <th class="py-3 px-6">Applied On</th>
+                  <th class="py-3 px-6 text-center">Status</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100">
+                ${applications.map(a => {
+                  const student = a.student || {};
+                  const job = a.job || {};
+                  const company = a.company || {};
+                  return `
+                    <tr class="hover:bg-gray-50/50 transition-colors">
+                      <td class="py-4 px-6">
+                        <div class="font-bold text-gray-800">${student.name || 'Unknown student'}</div>
+                        <div class="text-xs text-gray-500">${student.branch || ''} • CGPA: ${student.cgpa || 'N/A'}</div>
+                        <div class="text-xs text-gray-400 mt-0.5"><i class="fa-solid fa-phone mr-1"></i>${student.phone || 'No phone'}</div>
+                      </td>
+                      <td class="py-4 px-6">
+                        <div class="font-semibold text-gray-800">${job.title || 'Unknown Job'}</div>
+                        <div class="text-xs text-gray-500">${company.companyName || ''}</div>
+                      </td>
+                      <td class="py-4 px-6 text-sm text-gray-500">
+                        ${new Date(a.appliedAt).toLocaleDateString()}
+                      </td>
+                      <td class="py-4 px-6">
+                        <div class="flex justify-center items-center">
+                          <select data-id="${a.id}" class="statusSelect border p-1 rounded text-sm bg-white font-medium text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                            <option value="applied" ${a.status === 'applied' ? 'selected' : ''}>Applied</option>
+                            <option value="shortlisted" ${a.status === 'shortlisted' ? 'selected' : ''}>Shortlisted</option>
+                            <option value="rejected" ${a.status === 'rejected' ? 'selected' : ''}>Rejected</option>
+                            <option value="accepted" ${a.status === 'accepted' ? 'selected' : ''}>Accepted</option>
+                          </select>
+                        </div>
+                      </td>
+                    </tr>
+                  `;
+                }).join('') || `
+                  <tr>
+                    <td colspan="4" class="py-8 text-center text-gray-500">No applications received yet.</td>
+                  </tr>
+                `}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+
+      // Handle Change Status dropdown
+      document.querySelectorAll('.statusSelect').forEach(select => {
+        select.addEventListener('change', async () => {
+          const id = select.getAttribute('data-id');
+          const newStatus = select.value;
+          const res = await apiPut(`/admin/application/${id}/status`, { status: newStatus });
+          if (res.id) {
+            showToast(`Application status updated to ${newStatus}`);
+            loadData(); // refresh local data
+          } else {
+            showToast(res.message || 'Error updating status', 'error');
+            // reset select value
+            renderApplications();
+          }
+        });
+      });
+    }
+
+    // Set tab triggers
+    document.getElementById('tabBtnOverview').addEventListener('click', renderOverview);
+    document.getElementById('tabBtnCompanies').addEventListener('click', renderCompanies);
+    document.getElementById('tabBtnJobs').addEventListener('click', renderJobs);
+    document.getElementById('tabBtnApplications').addEventListener('click', renderApplications);
+
+    // Initial render
+    renderOverview();
   </script>
 </body>
 </html>

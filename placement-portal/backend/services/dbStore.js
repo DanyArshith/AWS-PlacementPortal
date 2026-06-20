@@ -3,6 +3,7 @@ const Company = require('../models/Company');
 const Job = require('../models/Job');
 const Application = require('../models/Application');
 const Admin = require('../models/Admin');
+const s3Service = require('./s3Service');
 
 const mapId = (doc) => {
   if (!doc) return doc;
@@ -13,16 +14,39 @@ const mapId = (doc) => {
   return obj;
 };
 
-const stripPassword = (student) => {
+const mapStudentS3 = async (student) => {
   if (!student) return student;
   const obj = mapId(student);
+  if (obj.resumeUrl) {
+    obj.resumeUrl = await s3Service.getDownloadUrl(obj.resumeUrl);
+  }
+  if (obj.profileImage) {
+    obj.profileImage = await s3Service.getDownloadUrl(obj.profileImage);
+  }
+  return obj;
+};
+
+const stripPassword = async (student) => {
+  if (!student) return student;
+  const obj = await mapStudentS3(student);
   delete obj.password;
+  return obj;
+};
+
+const mapCompanyS3 = async (company) => {
+  if (!company) return company;
+  const obj = mapId(company);
+  if (obj.logo) {
+    obj.logo = await s3Service.getDownloadUrl(obj.logo);
+  }
   return obj;
 };
 
 module.exports = {
   stripPassword,
   mapId,
+  mapStudentS3,
+  mapCompanyS3,
 
   getAdminByUsername: async (username) => {
     const admin = await Admin.findOne({ username }).select('+password');
@@ -31,17 +55,17 @@ module.exports = {
 
   getStudentByEmail: async (email) => {
     const student = await Student.findOne({ email }).select('+password');
-    return mapId(student);
+    return mapStudentS3(student);
   },
 
   getStudentById: async (id) => {
     const student = await Student.findById(id);
-    return mapId(student);
+    return mapStudentS3(student);
   },
 
   getCompanyById: async (id) => {
     const company = await Company.findById(id);
-    return mapId(company);
+    return mapCompanyS3(company);
   },
 
   getJobById: async (id) => {
@@ -51,12 +75,12 @@ module.exports = {
 
   listStudents: async () => {
     const students = await Student.find();
-    return students.map(stripPassword);
+    return Promise.all(students.map(stripPassword));
   },
 
   listCompanies: async () => {
     const companies = await Company.find();
-    return companies.map(mapId);
+    return Promise.all(companies.map(mapCompanyS3));
   },
 
   listJobs: async () => {
@@ -83,12 +107,12 @@ module.exports = {
   createCompany: async (payload) => {
     const company = new Company(payload);
     await company.save();
-    return mapId(company);
+    return mapCompanyS3(company);
   },
 
   updateCompany: async (id, updates) => {
     const company = await Company.findByIdAndUpdate(id, { $set: updates }, { returnDocument: 'after' });
-    return mapId(company);
+    return mapCompanyS3(company);
   },
 
   deleteCompany: async (id) => {

@@ -9,7 +9,7 @@
 </head>
 <body class="bg-gray-50">
   <script>
-    window.USE_FIXTURES = true;
+    window.USE_FIXTURES = false;
   </script>
   <div id="app"></div>
 
@@ -38,7 +38,8 @@
         </main>
       `;
 
-      const jobs = await apiGet('/jobs');
+      const res = await apiGet('/jobs');
+      const jobs = res.data || [];
       const recent = document.getElementById('recentJobs');
       recent.innerHTML = jobs.slice(0,5).map(j => `
         <div class="border-b py-2">

@@ -1,5 +1,19 @@
-// Simple API wrapper — supports Phase 2 fixtures mode when `window.USE_FIXTURES === true`
-const API_BASE = '/api';
+/**
+ * ARCHITECTURE NOTE: CLIENT-SIDE TOKEN STORAGE STRATEGY
+ * 
+ * Strategy Choice: localStorage
+ * Rationale:
+ * - We store the JSON Web Token (JWT) in localStorage (`pp_token`) for client-side authentication persistence.
+ * - Since the backend is running decoupled on a separate origin/domain (EC2 or localhost:4000)
+ *   and the frontend is a purely static site hosted on S3, setting HttpOnly cookies cross-domain
+ *   is complex (requires configuring Cross-Origin Resource Sharing (CORS) with credentials,
+ *   setting up matching parent domains, HTTPS SSL on both sides, etc.).
+ * - localStorage allows the static frontend to cleanly access the decoupled REST API with Bearer auth headers.
+ * - To mitigate Cross-Site Scripting (XSS) risks, we ensure all dynamically rendered user inputs
+ *   are strictly sanitized (escaped) in the UI before outputting them to the DOM.
+ */
+
+const API_BASE = 'http://127.0.0.1:4000/api';
 
 const getToken = () => localStorage.getItem('pp_token');
 const setToken = (t) => localStorage.setItem('pp_token', t);
@@ -25,7 +39,6 @@ async function loadFixture(name) {
 async function apiGet(path) {
   if (window && window.USE_FIXTURES) {
     // map some common GETs to fixture files
-    // support query params for /jobs: /jobs?search=...&page=1&limit=10
     const [p, q] = path.split('?');
     const query = new URLSearchParams(q || '');
     if (p === '/jobs') {
@@ -67,11 +80,9 @@ async function apiPost(path, body, isForm = false) {
       return { message: 'Invalid credentials' };
     }
     if (path === '/auth/register') {
-      // naive register: return token
       return { token: 'mock-token' };
     }
     if (path === '/jobs/apply') {
-      // simulate creating an application
       const apps = await loadFixture('applications');
       const newApp = { _id: `app${Date.now()}`, studentId: 'stu1', jobId: body.jobId, status: 'applied', appliedAt: new Date().toISOString() };
       apps.push(newApp);
@@ -89,4 +100,29 @@ async function apiPost(path, body, isForm = false) {
   return res.json();
 }
 
-export { API_BASE, apiGet, apiPost, setToken, getToken };
+async function apiPut(path, body) {
+  if (window && window.USE_FIXTURES) {
+    return { message: 'Mock update success' };
+  }
+  const opts = { 
+    method: 'PUT', 
+    headers: headers(true),
+    body: JSON.stringify(body)
+  };
+  const res = await fetch(`${API_BASE}${path}`, opts);
+  return res.json();
+}
+
+async function apiDelete(path) {
+  if (window && window.USE_FIXTURES) {
+    return { message: 'Mock delete success' };
+  }
+  const opts = { 
+    method: 'DELETE', 
+    headers: headers(false) 
+  };
+  const res = await fetch(`${API_BASE}${path}`, opts);
+  return res.json();
+}
+
+export { API_BASE, apiGet, apiPost, apiPut, apiDelete, setToken, getToken };

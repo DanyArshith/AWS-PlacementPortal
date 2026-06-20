@@ -8,12 +8,12 @@
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body class="bg-gray-50">
-  <script>window.USE_FIXTURES = true;</script>
+  <script>window.USE_FIXTURES = false;</script>
   <div id="app" class="container mx-auto px-4 py-8"></div>
 
   <script type="module">
     import { renderNavbar, showToast } from '/js/ui.js';
-    import { apiGet } from '/js/api.js';
+    import { apiGet, apiPost } from '/js/api.js';
     renderNavbar('body');
 
     async function render() {
@@ -41,11 +41,13 @@
       `;
 
       document.getElementById('applyBtn').addEventListener('click', async () => {
-        // In fixture mode the apply flow is simulated via /jobs/apply
         try {
-          const res = await fetch('/api/jobs/apply', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ jobId: id }) });
-          const data = await res.json().catch(() => ({}));
-          showToast('Applied (fixture)');
+          const res = await apiPost('/jobs/apply', { jobId: id });
+          if (res.message) {
+            showToast(res.message, res.message.includes('success') || res.message.includes('applied') ? 'info' : 'error');
+          } else {
+            showToast('Applied successfully!');
+          }
         } catch (err) { showToast('Apply failed', 'error'); }
       });
     }

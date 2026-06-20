@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body class="bg-gray-50">
-  <script>window.USE_FIXTURES = true;</script>
+  <script>window.USE_FIXTURES = false;</script>
   <div id="app" class="container mx-auto px-4 py-8"></div>
 
   <script type="module">
@@ -23,15 +23,24 @@
         container.innerHTML = '<div class="empty-state card">No applications found.</div>';
         return;
       }
-      const jobs = await apiGet('/jobs');
-      const jobsMap = (jobs||[]).reduce((acc,j)=>{acc[j._id]=j;return acc;},{})
       container.innerHTML = `
         <main>
           <h1 class="text-2xl font-semibold mb-4">Applied Jobs</h1>
           <div class="space-y-3">
             ${apps.map(a => {
-              const j = jobsMap[a.jobId] || {};
-              return `<div class="card"><div class="flex justify-between"><div><strong>${j.title||'Unknown'}</strong><div class="text-sm text-gray-600">${j.companyId||''}</div></div><div class="text-sm">${a.status}</div></div></div>`;
+              const j = a.job || {};
+              const c = a.company || {};
+              const companyName = c.companyName || '';
+              return `
+                <div class="card bg-white p-4 rounded shadow mb-2">
+                  <div class="flex justify-between items-center">
+                    <div>
+                      <strong class="text-lg text-gray-800">${j.title || 'Unknown Position'}</strong>
+                      <div class="text-sm text-gray-600">${companyName}</div>
+                    </div>
+                    <div class="text-sm font-semibold capitalize text-blue-600">${a.status}</div>
+                  </div>
+                </div>`;
             }).join('')}
           </div>
         </main>

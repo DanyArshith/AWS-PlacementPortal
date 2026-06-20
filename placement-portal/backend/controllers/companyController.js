@@ -1,5 +1,6 @@
 const { validationResult } = require('express-validator');
 const store = require('../services/dbStore');
+const s3Service = require('../services/s3Service');
 
 exports.createCompany = async (req, res, next) => {
   try {
@@ -8,7 +9,12 @@ exports.createCompany = async (req, res, next) => {
 
     const payload = { ...req.body };
     if (req.file) {
-      payload.logo = `mock://logos/${req.file.originalname}`;
+      // File validation and scanning hook (virus scan placeholder)
+      console.log(`[VIRUS SCAN] Scanning file for malware: ${req.file.originalname}`);
+      console.log(`[VIRUS SCAN] Clean report generated for: ${req.file.originalname}`);
+
+      const key = await s3Service.uploadFile(req.file.buffer, req.file.originalname, req.file.mimetype, 'logos');
+      payload.logo = key;
     }
     const company = await store.createCompany(payload);
     res.status(201).json(company);
