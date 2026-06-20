@@ -22,7 +22,23 @@
     </form>
   </div>
 
-  <script src="/js/api.js"></script>
-  <script src="/js/auth.js"></script>
+  <script>
+    window.USE_FIXTURES = true;
+  </script>
+  <script type="module">
+    import { renderNavbar } from '/js/ui.js';
+    import { apiPost, setToken } from '/js/api.js';
+    renderNavbar('body');
+
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('name').value;
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const res = await apiPost('/auth/register', { name, email, password });
+      if (res.token) { setToken(res.token); window.location = '/dashboard.html'; }
+      else alert(res.message || 'Register failed');
+    });
+  </script>
 </body>
 </html>

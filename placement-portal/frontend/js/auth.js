@@ -21,3 +21,4 @@ document.addEventListener('submit', async (e) => {
     else alert(res.message || 'Register failed');
   }
 });
+

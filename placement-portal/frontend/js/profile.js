@@ -38,3 +38,4 @@ document.getElementById('profileForm').addEventListener('submit', async (e) => {
 
   alert('Profile updated');
 });
+

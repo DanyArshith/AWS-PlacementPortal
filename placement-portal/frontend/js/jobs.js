@@ -9,7 +9,7 @@ async function renderJobs() {
     <div class="bg-white p-4 rounded shadow">
       <h3 class="font-semibold">${j.title}</h3>
       <p class="text-sm text-gray-600">${j.description || ''}</p>
-      <p class="text-sm text-gray-500 mt-2">${j.companyId?.companyName || ''} • ${j.location || ''}</p>
+      <p class="text-sm text-gray-500 mt-2">${j.companyId || ''} • ${j.location || ''}</p>
       <button data-id="${j._id}" class="applyBtn mt-3 bg-blue-600 text-white px-3 py-1 rounded">Apply</button>
     </div>
   `).join('');
@@ -24,3 +24,4 @@ async function renderJobs() {
 }
 
 document.addEventListener('DOMContentLoaded', renderJobs);
+
