@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Applied Jobs - Placement Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="bg-gray-50">
+  <script>window.USE_FIXTURES = true;</script>
+  <div id="app" class="container mx-auto px-4 py-8"></div>
+
+  <script type="module">
+    import { renderNavbar } from '/js/ui.js';
+    import { apiGet } from '/js/api.js';
+    renderNavbar('body');
+
+    async function render() {
+      const apps = await apiGet('/jobs/applied');
+      const container = document.getElementById('app');
+      if (!Array.isArray(apps) || apps.length === 0) {
+        container.innerHTML = '<div class="empty-state card">No applications found.</div>';
+        return;
+      }
+      const jobs = await apiGet('/jobs');
+      const jobsMap = (jobs||[]).reduce((acc,j)=>{acc[j._id]=j;return acc;},{})
+      container.innerHTML = `
+        <main>
+          <h1 class="text-2xl font-semibold mb-4">Applied Jobs</h1>
+          <div class="space-y-3">
+            ${apps.map(a => {
+              const j = jobsMap[a.jobId] || {};
+              return `<div class="card"><div class="flex justify-between"><div><strong>${j.title||'Unknown'}</strong><div class="text-sm text-gray-600">${j.companyId||''}</div></div><div class="text-sm">${a.status}</div></div></div>`;
+            }).join('')}
+          </div>
+        </main>
+      `;
+    }
+
+    render();
+  </script>
+</body>
+</html>

@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Job Detail - Placement Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="bg-gray-50">
+  <script>window.USE_FIXTURES = true;</script>
+  <div id="app" class="container mx-auto px-4 py-8"></div>
+
+  <script type="module">
+    import { renderNavbar, showToast } from '/js/ui.js';
+    import { apiGet } from '/js/api.js';
+    renderNavbar('body');
+
+    async function render() {
+      const id = location.hash.replace('#','') || new URLSearchParams(location.search).get('id');
+      if (!id) {
+        document.getElementById('app').innerHTML = '<div class="empty-state card">No job selected.</div>';
+        return;
+      }
+      const job = await apiGet('/jobs/' + id);
+      if (!job) {
+        document.getElementById('app').innerHTML = '<div class="empty-state card">Job not found.</div>';
+        return;
+      }
+      document.getElementById('app').innerHTML = `
+        <main class="bg-white p-6 rounded shadow">
+          <h1 class="text-2xl font-semibold mb-2">${job.title}</h1>
+          <div class="text-sm text-gray-600 mb-4">${job.companyId || ''} • ${job.location || ''} • ${job.salary || ''}</div>
+          <section class="mb-4"><h3 class="font-semibold">Description</h3><p class="text-sm text-gray-700">${job.description || ''}</p></section>
+          <section class="mb-4"><h3 class="font-semibold">Eligibility</h3><p class="text-sm text-gray-700">${job.eligibility || ''}</p></section>
+          <div class="flex gap-2">
+            <button id="applyBtn" class="bg-blue-600 text-white px-4 py-2 rounded">Apply</button>
+            <a href="/jobs.html" class="text-sm text-gray-600 self-center">Back to jobs</a>
+          </div>
+        </main>
+      `;
+
+      document.getElementById('applyBtn').addEventListener('click', async () => {
+        // In fixture mode the apply flow is simulated via /jobs/apply
+        try {
+          const res = await fetch('/api/jobs/apply', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ jobId: id }) });
+          const data = await res.json().catch(() => ({}));
+          showToast('Applied (fixture)');
+        } catch (err) { showToast('Apply failed', 'error'); }
+      });
+    }
+
+    window.addEventListener('hashchange', render);
+    render();
+  </script>
+</body>
+</html>
