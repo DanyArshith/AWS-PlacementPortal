@@ -1,39 +1,72 @@
-const Job = require('../models/Job');
-const Student = require('../models/Student');
-const Application = require('../models/Application');
+const { validationResult } = require('express-validator');
+const store = require('../services/dbStore');
 
 exports.createJob = async (req, res, next) => {
   try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
     const payload = req.body;
-    const job = await Job.create(payload);
-    res.json(job);
+    const company = await store.getCompanyById(payload.companyId);
+    if (!company) {
+      return res.status(400).json({ message: 'Invalid companyId' });
+    }
+    const job = await store.createJob(payload);
+    res.status(201).json(job);
   } catch (err) { next(err); }
 };
 
 exports.updateJob = async (req, res, next) => {
   try {
-    const job = await Job.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const job = await store.updateJob(req.params.id, req.body);
+    if (!job) return res.status(404).json({ message: 'Job not found' });
     res.json(job);
   } catch (err) { next(err); }
 };
 
 exports.deleteJob = async (req, res, next) => {
   try {
-    await Job.findByIdAndDelete(req.params.id);
+    const removed = await store.deleteJob(req.params.id);
+    if (!removed) return res.status(404).json({ message: 'Job not found' });
     res.json({ message: 'Deleted' });
   } catch (err) { next(err); }
 };
 
 exports.getStudents = async (req, res, next) => {
   try {
-    const students = await Student.find().select('-password');
+    const students = await store.listStudents();
     res.json(students);
   } catch (err) { next(err); }
 };
 
 exports.getApplications = async (req, res, next) => {
   try {
-    const apps = await Application.find().populate('studentId jobId');
+    const rawApps = await store.listApplications();
+    const apps = await Promise.all(
+      rawApps.map(async (application) => {
+        const student = await store.getStudentById(application.studentId);
+        const job = await store.getJobById(application.jobId);
+        const company = job ? await store.getCompanyById(job.companyId) : null;
+        return {
+          ...application,
+          student: student ? store.stripPassword(student) : null,
+          job,
+          company
+        };
+      })
+    );
     res.json(apps);
+  } catch (err) { next(err); }
+};
+
+exports.updateApplicationStatus = async (req, res, next) => {
+  try {
+    const { status } = req.body;
+    const allowed = ['applied', 'shortlisted', 'rejected', 'accepted'];
+    if (!allowed.includes(status)) return res.status(400).json({ message: 'Invalid status' });
+
+    const updated = await store.updateApplicationStatus(req.params.id, status);
+    if (!updated) return res.status(404).json({ message: 'Application not found' });
+    res.json(updated);
   } catch (err) { next(err); }
 };

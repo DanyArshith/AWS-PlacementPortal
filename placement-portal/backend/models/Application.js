@@ -7,4 +7,6 @@ const ApplicationSchema = new mongoose.Schema({
   appliedAt: { type: Date, default: Date.now }
 });
 
+ApplicationSchema.index({ studentId: 1, jobId: 1 }, { unique: true });
+
 module.exports = mongoose.model('Application', ApplicationSchema);

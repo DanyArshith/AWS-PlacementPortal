@@ -1,36 +1,39 @@
-const Company = require('../models/Company');
-const s3Service = require('../services/s3Service');
+const { validationResult } = require('express-validator');
+const store = require('../services/dbStore');
 
 exports.createCompany = async (req, res, next) => {
   try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
     const payload = { ...req.body };
     if (req.file) {
-      const key = `${process.env.S3_PREFIX || 'placement'}/logos/${Date.now()}-${req.file.originalname}`;
-      const url = await s3Service.uploadStream(req.file.buffer, key, req.file.mimetype);
-      payload.logo = url;
+      payload.logo = `mock://logos/${req.file.originalname}`;
     }
-    const company = await Company.create(payload);
-    res.json(company);
+    const company = await store.createCompany(payload);
+    res.status(201).json(company);
   } catch (err) { next(err); }
 };
 
 exports.getCompanies = async (req, res, next) => {
   try {
-    const companies = await Company.find();
+    const companies = await store.listCompanies();
     res.json(companies);
   } catch (err) { next(err); }
 };
 
 exports.updateCompany = async (req, res, next) => {
   try {
-    const company = await Company.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const company = await store.updateCompany(req.params.id, req.body);
+    if (!company) return res.status(404).json({ message: 'Company not found' });
     res.json(company);
   } catch (err) { next(err); }
 };
 
 exports.deleteCompany = async (req, res, next) => {
   try {
-    await Company.findByIdAndDelete(req.params.id);
+    const removed = await store.deleteCompany(req.params.id);
+    if (!removed) return res.status(404).json({ message: 'Company not found' });
     res.json({ message: 'Deleted' });
   } catch (err) { next(err); }
 };

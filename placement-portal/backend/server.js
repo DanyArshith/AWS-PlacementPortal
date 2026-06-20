@@ -4,11 +4,13 @@ const connectDB = require('./config/db');
 
 const PORT = process.env.PORT || 4000;
 
-connectDB().then(() => {
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+connectDB()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error('Database connection failed. Exiting process...', err);
+    process.exit(1);
   });
-}).catch(err => {
-  console.error('Failed to start server', err);
-  process.exit(1);
-});

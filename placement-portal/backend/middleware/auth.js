@@ -1,9 +1,9 @@
 const jwt = require('jsonwebtoken');
 
 exports.required = (req, res, next) => {
-  const auth = req.headers.authorization;
-  if (!auth || !auth.startsWith('Bearer ')) return res.status(401).json({ message: 'Unauthorized' });
-  const token = auth.split(' ')[1];
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) return res.status(401).json({ message: 'Unauthorized' });
+  const token = authHeader.split(' ')[1];
   try {
     const payload = jwt.verify(token, process.env.JWT_SECRET);
     req.user = { id: payload.id, role: payload.role };
@@ -12,9 +12,9 @@ exports.required = (req, res, next) => {
 };
 
 exports.admin = (req, res, next) => {
-  const auth = req.headers.authorization;
-  if (!auth || !auth.startsWith('Bearer ')) return res.status(401).json({ message: 'Unauthorized' });
-  const token = auth.split(' ')[1];
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) return res.status(401).json({ message: 'Unauthorized' });
+  const token = authHeader.split(' ')[1];
   try {
     const payload = jwt.verify(token, process.env.JWT_SECRET);
     if (payload.role !== 'admin') return res.status(403).json({ message: 'Forbidden' });

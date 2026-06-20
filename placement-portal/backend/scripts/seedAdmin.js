@@ -2,33 +2,37 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const Admin = require('../models/Admin');
+const connectDB = require('../config/db');
 
-const MONGODB_URI = process.env.MONGODB_URI;
-const USER = process.env.ADMIN_USERNAME;
-const PASS = process.env.ADMIN_PASSWORD;
+const seedAdmin = async () => {
+  try {
+    console.log('Connecting to database to seed admin user...');
+    await connectDB();
 
-if (!MONGODB_URI) {
-  console.error('MONGODB_URI required');
-  process.exit(1);
-}
-if (!USER || !PASS) {
-  console.error('Set ADMIN_USERNAME and ADMIN_PASSWORD in env');
-  process.exit(1);
-}
+    const username = 'admin';
+    const existingAdmin = await Admin.findOne({ username });
 
-const run = async () => {
-  await mongoose.connect(MONGODB_URI);
-  const hash = await bcrypt.hash(PASS, 10);
-  const existing = await Admin.findOne({ username: USER });
-  if (existing) {
-    existing.password = hash;
-    await existing.save();
-    console.log('Updated admin password');
-  } else {
-    await Admin.create({ username: USER, password: hash });
-    console.log('Created admin user');
+    if (existingAdmin) {
+      console.log(`Admin user with username "${username}" already exists.`);
+    } else {
+      console.log(`Admin user with username "${username}" not found. Creating...`);
+      
+      const hashedPassword = await bcrypt.hash('admin123', 10);
+      const newAdmin = new Admin({
+        username,
+        password: hashedPassword
+      });
+
+      await newAdmin.save();
+      console.log('Admin user seeded successfully. Username: "admin", Password: "admin123"');
+    }
+  } catch (error) {
+    console.error('Error seeding admin user:', error);
+  } finally {
+    await mongoose.connection.close();
+    console.log('Database connection closed.');
+    process.exit(0);
   }
-  process.exit(0);
 };
 
-run().catch(err => { console.error(err); process.exit(1); });
+seedAdmin();
