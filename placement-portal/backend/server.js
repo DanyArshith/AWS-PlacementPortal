@@ -2,15 +2,17 @@ require('dotenv').config();
 const app = require('./app');
 const connectDB = require('./config/db');
 
+const logger = require('./utils/logger');
+
 const PORT = process.env.PORT || 4000;
 
 connectDB()
   .then(() => {
     app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
+      logger.info(`Server running on port ${PORT}`);
     });
   })
   .catch((err) => {
-    console.error('Database connection failed. Exiting process...', err);
+    logger.error('Database connection failed. Exiting process...', err);
     process.exit(1);
   });
