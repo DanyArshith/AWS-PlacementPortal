@@ -1,0 +1,22 @@
+[
+  {
+    "_id": "job1",
+    "companyId": "comp1",
+    "title": "Junior Backend Engineer",
+    "description": "Work on REST APIs.",
+    "salary": "4 LPA",
+    "location": "Remote",
+    "eligibility": "CS, IT",
+    "deadline": "2026-07-31T00:00:00Z"
+  },
+  {
+    "_id": "job2",
+    "companyId": "comp2",
+    "title": "Frontend Engineer",
+    "description": "Build beautiful UIs.",
+    "salary": "5 LPA",
+    "location": "Onsite",
+    "eligibility": "All branches",
+    "deadline": "2026-08-15T00:00:00Z"
+  }
+]

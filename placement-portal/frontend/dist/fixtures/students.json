@@ -1,0 +1,14 @@
+[
+  {
+    "_id": "stu1",
+    "name": "Alice Student",
+    "email": "alice@example.com",
+    "password": "password123",
+    "phone": "1234567890",
+    "branch": "Computer Science",
+    "cgpa": 8.7,
+    "skills": ["JavaScript","Node.js","React"],
+    "resumeUrl": "",
+    "profileImage": ""
+  }
+]

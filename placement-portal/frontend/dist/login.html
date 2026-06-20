@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login - Placement Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="bg-gray-50 flex items-center justify-center h-screen">
+  <div class="w-full max-w-md">
+    <form id="loginForm" class="bg-white shadow rounded-lg p-6">
+      <h2 id="loginTitle" class="text-xl font-semibold mb-4 text-center">College Placement Portal</h2>
+      
+      <!-- Tab selector between Student and Placement Officer -->
+      <div class="flex border-b mb-6">
+        <button type="button" id="tabStudent" class="w-1/2 py-2 text-center border-b-2 border-blue-600 font-medium text-blue-600 transition-colors focus:outline-none">Student</button>
+        <button type="button" id="tabAdmin" class="w-1/2 py-2 text-center border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-700 transition-colors focus:outline-none">Placement Officer</button>
+      </div>
+
+      <div class="mb-4">
+        <label id="identifierLabel" class="block mb-2 text-sm font-medium text-gray-700">Email Address</label>
+        <input id="identifier" type="email" placeholder="student@example.com" required class="w-full border border-gray-300 p-2 rounded focus:ring-blue-500 focus:border-blue-500" />
+      </div>
+
+      <div class="mb-6">
+        <label class="block mb-2 text-sm font-medium text-gray-700">Password</label>
+        <input id="password" type="password" placeholder="••••••••" required class="w-full border border-gray-300 p-2 rounded focus:ring-blue-500 focus:border-blue-500" />
+      </div>
+
+      <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded transition-colors">Login</button>
+      
+      <p id="registerText" class="mt-4 text-sm text-center text-gray-600">Don't have an account? <a href="/register.html" class="text-blue-600 hover:underline">Register here</a></p>
+    </form>
+  </div>
+
+  <script>
+    window.USE_FIXTURES = false; // hit the live Express API
+  </script>
+  <script type="module">
+    import { renderNavbar } from '/js/ui.js';
+    import { apiPost, setToken } from '/js/api.js';
+    renderNavbar('body');
+
+    let currentRole = 'student';
+
+    const tabStudent = document.getElementById('tabStudent');
+    const tabAdmin = document.getElementById('tabAdmin');
+    const identifierLabel = document.getElementById('identifierLabel');
+    const identifierInput = document.getElementById('identifier');
+    const registerText = document.getElementById('registerText');
+
+    tabStudent.addEventListener('click', () => {
+      currentRole = 'student';
+      // Styles
+      tabStudent.className = 'w-1/2 py-2 text-center border-b-2 border-blue-600 font-medium text-blue-600 transition-colors focus:outline-none';
+      tabAdmin.className = 'w-1/2 py-2 text-center border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-700 transition-colors focus:outline-none';
+      // Labels
+      identifierLabel.textContent = 'Email Address';
+      identifierInput.type = 'email';
+      identifierInput.id = 'identifier';
+      identifierInput.placeholder = 'student@example.com';
+      registerText.style.display = 'block';
+    });
+
+    tabAdmin.addEventListener('click', () => {
+      currentRole = 'admin';
+      // Styles
+      tabAdmin.className = 'w-1/2 py-2 text-center border-b-2 border-blue-600 font-medium text-blue-600 transition-colors focus:outline-none';
+      tabStudent.className = 'w-1/2 py-2 text-center border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-700 transition-colors focus:outline-none';
+      // Labels
+      identifierLabel.textContent = 'Username';
+      identifierInput.type = 'text';
+      identifierInput.placeholder = 'admin';
+      registerText.style.display = 'none';
+    });
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const val = identifierInput.value;
+      const pwd = document.getElementById('password').value;
+
+      if (currentRole === 'student') {
+        const res = await apiPost('/auth/login', { email: val, password: pwd });
+        if (res.token) {
+          setToken(res.token);
+          window.location = '/dashboard.html';
+        } else {
+          alert(res.message || 'Login failed');
+        }
+      } else {
+        const res = await apiPost('/auth/admin/login', { username: val, password: pwd });
+        if (res.token) {
+          setToken(res.token);
+          window.location = '/admin.html';
+        } else {
+          alert(res.message || 'Placement Officer Login failed');
+        }
+      }
+    });
+  </script>
+</body>
+</html>

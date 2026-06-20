@@ -1,0 +1,9 @@
+[
+  {
+    "_id": "app1",
+    "studentId": "stu1",
+    "jobId": "job1",
+    "status": "applied",
+    "appliedAt": "2026-06-20T10:00:00Z"
+  }
+]

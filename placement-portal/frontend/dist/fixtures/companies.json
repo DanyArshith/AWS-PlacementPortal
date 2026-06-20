@@ -1,0 +1,4 @@
+[
+  {"_id": "comp1", "companyName": "Acme Corp", "description": "Leading maker of anvils", "website": "https://acme.example.com", "logo": ""},
+  {"_id": "comp2", "companyName": "TechSoft", "description": "Enterprise software", "website": "https://techsoft.example.com", "logo": ""}
+]

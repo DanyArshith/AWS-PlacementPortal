@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Register - Placement Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="bg-gray-50 flex items-center justify-center h-screen">
+  <div class="w-full max-w-md">
+    <form id="registerForm" class="bg-white shadow rounded-lg p-6">
+      <h2 class="text-xl font-semibold mb-4">Student Register</h2>
+      <label class="block mb-2 text-sm">Name</label>
+      <input id="name" type="text" required class="w-full border p-2 rounded mb-3" />
+      <label class="block mb-2 text-sm">Email</label>
+      <input id="email" type="email" required class="w-full border p-2 rounded mb-3" />
+      <label class="block mb-2 text-sm">Password</label>
+      <input id="password" type="password" required class="w-full border p-2 rounded mb-4" />
+      <button type="submit" class="w-full bg-green-600 text-white py-2 rounded">Register</button>
+      <p class="mt-4 text-sm text-gray-600">Already have an account? <a href="/login.html" class="text-blue-600">Login</a></p>
+    </form>
+  </div>
+
+  <script>
+    window.USE_FIXTURES = false;
+  </script>
+  <script type="module">
+    import { renderNavbar } from '/js/ui.js';
+    import { apiPost, setToken } from '/js/api.js';
+    renderNavbar('body');
+
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('name').value;
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const res = await apiPost('/auth/register', { name, email, password });
+      if (res.token) { setToken(res.token); window.location = '/dashboard.html'; }
+      else alert(res.message || 'Register failed');
+    });
+  </script>
+</body>
+</html>
