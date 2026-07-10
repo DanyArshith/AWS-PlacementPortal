@@ -13,7 +13,7 @@
  *   are strictly sanitized (escaped) in the UI before outputting them to the DOM.
  */
 
-const API_BASE = 'http://127.0.0.1:4000/api';
+const API_BASE = 'http://44.218.153.123/api';
 
 const getToken = () => localStorage.getItem('pp_token');
 const setToken = (t) => localStorage.setItem('pp_token', t);
@@ -46,7 +46,7 @@ async function apiGet(path) {
       const search = query.get('search');
       if (search) {
         const s = search.toLowerCase();
-        jobs = jobs.filter(j => (j.title||'').toLowerCase().includes(s) || (j.description||'').toLowerCase().includes(s));
+        jobs = jobs.filter(j => (j.title || '').toLowerCase().includes(s) || (j.description || '').toLowerCase().includes(s));
       }
       // pagination
       const page = parseInt(query.get('page') || '1', 10);
@@ -104,8 +104,8 @@ async function apiPut(path, body) {
   if (window && window.USE_FIXTURES) {
     return { message: 'Mock update success' };
   }
-  const opts = { 
-    method: 'PUT', 
+  const opts = {
+    method: 'PUT',
     headers: headers(true),
     body: JSON.stringify(body)
   };
@@ -117,9 +117,9 @@ async function apiDelete(path) {
   if (window && window.USE_FIXTURES) {
     return { message: 'Mock delete success' };
   }
-  const opts = { 
-    method: 'DELETE', 
-    headers: headers(false) 
+  const opts = {
+    method: 'DELETE',
+    headers: headers(false)
   };
   const res = await fetch(`${API_BASE}${path}`, opts);
   return res.json();
