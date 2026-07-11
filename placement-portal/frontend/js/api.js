@@ -13,7 +13,9 @@
  *   are strictly sanitized (escaped) in the UI before outputting them to the DOM.
  */
 
-const API_BASE = 'http://44.218.153.123/api';
+const API_BASE = (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'))
+  ? 'http://localhost:4000/api'
+  : 'http://44.218.153.123/api';
 
 const getToken = () => localStorage.getItem('pp_token');
 const setToken = (t) => localStorage.setItem('pp_token', t);

@@ -6,13 +6,20 @@ const logger = require('./utils/logger');
 
 const PORT = process.env.PORT || 4000;
 
-connectDB()
-  .then(() => {
-    app.listen(PORT, () => {
-      logger.info(`Server running on port ${PORT}`);
-    });
-  })
-  .catch((err) => {
-    logger.error('Database connection failed. Exiting process...', err);
-    process.exit(1);
+if (process.env.USE_MOCK_DB === 'true') {
+  logger.info('Database Mode: mock (in-memory)');
+  app.listen(PORT, () => {
+    logger.info(`Server running on port ${PORT}`);
   });
+} else {
+  connectDB()
+    .then(() => {
+      app.listen(PORT, () => {
+        logger.info(`Server running on port ${PORT}`);
+      });
+    })
+    .catch((err) => {
+      logger.error('Database connection failed. Exiting process...', err);
+      process.exit(1);
+    });
+}

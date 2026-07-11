@@ -99,6 +99,12 @@ module.exports = {
     Object.assign(student, updates);
     return stripPassword(student);
   },
+  deleteStudent: (id) => {
+    const index = db.students.findIndex((student) => student.id === id);
+    if (index === -1) return false;
+    db.students.splice(index, 1);
+    return true;
+  },
   createCompany: (payload) => {
     const company = { id: makeId('company'), createdAt: new Date().toISOString(), logo: '', ...payload };
     db.companies.push(company);

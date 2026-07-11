@@ -49,7 +49,7 @@ exports.getApplications = async (req, res, next) => {
         const company = job ? await store.getCompanyById(job.companyId) : null;
         return {
           ...application,
-          student: student ? store.stripPassword(student) : null,
+          student: student ? await store.stripPassword(student) : null,
           job,
           company
         };
@@ -68,5 +68,21 @@ exports.updateApplicationStatus = async (req, res, next) => {
     const updated = await store.updateApplicationStatus(req.params.id, status);
     if (!updated) return res.status(404).json({ message: 'Application not found' });
     res.json(updated);
+  } catch (err) { next(err); }
+};
+
+exports.updateStudent = async (req, res, next) => {
+  try {
+    const student = await store.updateStudent(req.params.id, req.body);
+    if (!student) return res.status(404).json({ message: 'Student not found' });
+    res.json(student);
+  } catch (err) { next(err); }
+};
+
+exports.deleteStudent = async (req, res, next) => {
+  try {
+    const removed = await store.deleteStudent(req.params.id);
+    if (!removed) return res.status(404).json({ message: 'Student not found' });
+    res.json({ message: 'Deleted' });
   } catch (err) { next(err); }
 };

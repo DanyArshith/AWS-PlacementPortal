@@ -36,7 +36,7 @@ exports.login = async (req, res, next) => {
     if (!match) return res.status(401).json({ message: 'Invalid credentials' });
 
     const token = signToken({ id: student.id, role: 'student' });
-    res.json({ token, user: store.stripPassword(student) });
+    res.json({ token, user: await store.stripPassword(student) });
   } catch (err) { next(err); }
 };
 

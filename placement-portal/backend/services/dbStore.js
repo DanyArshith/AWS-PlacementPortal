@@ -42,7 +42,7 @@ const mapCompanyS3 = async (company) => {
   return obj;
 };
 
-module.exports = {
+const dbStore = {
   stripPassword,
   mapId,
   mapStudentS3,
@@ -104,6 +104,11 @@ module.exports = {
     return stripPassword(student);
   },
 
+  deleteStudent: async (id) => {
+    const res = await Student.findByIdAndDelete(id);
+    return !!res;
+  },
+
   createCompany: async (payload) => {
     const company = new Company(payload);
     await company.save();
@@ -157,3 +162,9 @@ module.exports = {
     return apps.map(mapId);
   }
 };
+
+if (process.env.USE_MOCK_DB === 'true') {
+  module.exports = require('./mockStore');
+} else {
+  module.exports = dbStore;
+}
