@@ -44,7 +44,7 @@
       recent.innerHTML = jobs.slice(0,5).map(j => `
         <div class="border-b py-2">
           <div class="flex justify-between">
-            <div><strong>${j.title}</strong><div class="text-sm text-gray-600">${j.companyId || ''}</div></div>
+            <div><strong>${j.title}</strong><div class="text-sm text-gray-600">${j.company?.companyName || j.companyId || ''}</div></div>
             <div><a class="text-blue-600" href="/jobs.html">View</a></div>
           </div>
         </div>

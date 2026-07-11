@@ -30,7 +30,7 @@
       document.getElementById('app').innerHTML = `
         <main class="bg-white p-6 rounded shadow">
           <h1 class="text-2xl font-semibold mb-2">${job.title}</h1>
-          <div class="text-sm text-gray-600 mb-4">${job.companyId || ''} • ${job.location || ''} • ${job.salary || ''}</div>
+          <div class="text-sm text-gray-600 mb-4">${job.company?.companyName || job.companyId || ''} • ${job.location || ''} • ${job.salary || ''}</div>
           <section class="mb-4"><h3 class="font-semibold">Description</h3><p class="text-sm text-gray-700">${job.description || ''}</p></section>
           <section class="mb-4"><h3 class="font-semibold">Eligibility</h3><p class="text-sm text-gray-700">${job.eligibility || ''}</p></section>
           <div class="flex gap-2">
