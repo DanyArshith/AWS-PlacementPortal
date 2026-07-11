@@ -1,3 +1,42 @@
+// Global Client-side Route Guard for role-based access control
+(function() {
+  const path = window.location.pathname;
+  const page = path.substring(path.lastIndexOf('/')) || '/';
+  
+  const publicPages = ['/', '/index.html', '/login.html', '/register.html'];
+  const token = localStorage.getItem('pp_token');
+  
+  if (!token) {
+    // If not logged in, block access to all protected pages
+    if (!publicPages.includes(page)) {
+      window.location = '/login.html';
+    }
+  } else {
+    // Logged in: check roles and enforce access boundaries
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const role = payload.role;
+      
+      if (role === 'student') {
+        // Students are forbidden from admin panel
+        if (page === '/admin.html') {
+          window.location = '/dashboard.html';
+        }
+      } else if (role === 'admin') {
+        // Admins are forbidden from student-facing pages
+        const studentPages = ['/dashboard.html', '/profile.html', '/applied-jobs.html', '/jobs.html', '/job-detail.html'];
+        if (studentPages.includes(page)) {
+          window.location = '/admin.html';
+        }
+      }
+    } catch (e) {
+      // If token parsing fails, clear it and redirect to login
+      localStorage.removeItem('pp_token');
+      window.location = '/login.html';
+    }
+  }
+})();
+
 // UI helpers for Phase 2 static frontend
 export function renderNavbar(containerSelector = 'body') {
   const container = document.querySelector(containerSelector);
