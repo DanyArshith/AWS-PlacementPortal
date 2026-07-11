@@ -27,6 +27,19 @@
         document.getElementById('app').innerHTML = '<div class="empty-state card">Job not found.</div>';
         return;
       }
+
+      let hasApplied = false;
+      try {
+        const appliedApps = await apiGet('/jobs/applied');
+        if (Array.isArray(appliedApps)) {
+          hasApplied = appliedApps.some(a => a.jobId === job.id);
+        }
+      } catch (e) { /* ignore */ }
+
+      const buttonHtml = hasApplied
+        ? `<button disabled class="bg-gray-150 text-gray-400 px-4 py-2 rounded cursor-not-allowed font-medium">Applied</button>`
+        : `<button id="applyBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors focus:outline-none">Apply</button>`;
+
       document.getElementById('app').innerHTML = `
         <main class="bg-white p-6 rounded shadow">
           <h1 class="text-2xl font-semibold mb-2">${job.title}</h1>
@@ -34,22 +47,25 @@
           <section class="mb-4"><h3 class="font-semibold">Description</h3><p class="text-sm text-gray-700">${job.description || ''}</p></section>
           <section class="mb-4"><h3 class="font-semibold">Eligibility</h3><p class="text-sm text-gray-700">${job.eligibility || ''}</p></section>
           <div class="flex gap-2">
-            <button id="applyBtn" class="bg-blue-600 text-white px-4 py-2 rounded">Apply</button>
-            <a href="/jobs.html" class="text-sm text-gray-600 self-center">Back to jobs</a>
+            ${buttonHtml}
+            <a href="/jobs.html" class="text-sm text-blue-600 self-center hover:underline font-semibold ml-2">Back to jobs</a>
           </div>
         </main>
       `;
 
-      document.getElementById('applyBtn').addEventListener('click', async () => {
-        try {
-          const res = await apiPost('/jobs/apply', { jobId: id });
-          if (res.message) {
-            showToast(res.message, res.message.includes('success') || res.message.includes('applied') ? 'info' : 'error');
-          } else {
-            showToast('Applied successfully!');
-          }
-        } catch (err) { showToast('Apply failed', 'error'); }
-      });
+      if (!hasApplied) {
+        document.getElementById('applyBtn').addEventListener('click', async () => {
+          try {
+            const res = await apiPost('/jobs/apply', { jobId: id });
+            if (res.id) {
+              showToast('Applied successfully!');
+              render(); // refresh state
+            } else {
+              showToast(res.message || 'Apply failed', 'error');
+            }
+          } catch (err) { showToast('Apply failed', 'error'); }
+        });
+      }
     }
 
     window.addEventListener('hashchange', render);

@@ -3,14 +3,42 @@ export function renderNavbar(containerSelector = 'body') {
   const container = document.querySelector(containerSelector);
   const nav = document.createElement('header');
   nav.className = 'bg-white shadow';
+
+  // Decode JWT role dynamically
+  let role = null;
+  const token = localStorage.getItem('pp_token');
+  if (token) {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      role = payload.role;
+    } catch (e) { /* ignore */ }
+  }
+
+  let linksHtml = '';
+  if (role === 'admin') {
+    linksHtml = `
+      <a href="/admin.html" class="text-sm text-gray-700 font-semibold hover:text-blue-600 transition-colors">Admin Dashboard</a>
+      <button onclick="localStorage.removeItem('pp_token'); window.location='/login.html';" class="text-sm text-red-600 hover:underline focus:outline-none ml-2">Logout</button>
+    `;
+  } else if (role === 'student') {
+    linksHtml = `
+      <a href="/jobs.html" class="text-sm text-gray-700 font-semibold hover:text-blue-600 transition-colors">Jobs</a>
+      <a href="/applied-jobs.html" class="text-sm text-gray-700 font-semibold hover:text-blue-600 transition-colors">Applied Status</a>
+      <a href="/dashboard.html" class="text-sm text-gray-700 font-semibold hover:text-blue-600 transition-colors">Dashboard</a>
+      <a href="/profile.html" class="text-sm text-gray-700 font-semibold hover:text-blue-600 transition-colors">Profile</a>
+      <button onclick="localStorage.removeItem('pp_token'); window.location='/login.html';" class="text-sm text-red-600 hover:underline focus:outline-none ml-2">Logout</button>
+    `;
+  } else {
+    linksHtml = `
+      <a href="/login.html" class="text-sm text-blue-600 hover:underline font-semibold">Login</a>
+    `;
+  }
+
   nav.innerHTML = `
     <div class="container mx-auto px-4 py-4 flex justify-between items-center">
-      <a href="/index.html" class="text-lg font-semibold">Placement Portal</a>
+      <a href="/index.html" class="text-lg font-bold text-gray-800 hover:text-blue-600 transition-colors">Placement Portal</a>
       <div class="flex items-center space-x-4">
-        <a href="/jobs.html" class="text-sm text-gray-700">Jobs</a>
-        <a href="/dashboard.html" class="text-sm text-gray-700">Dashboard</a>
-        <a href="/profile.html" class="text-sm text-gray-700">Profile</a>
-        <a href="/admin.html" class="text-sm text-gray-700">Admin</a>
+        ${linksHtml}
       </div>
     </div>
   `;
