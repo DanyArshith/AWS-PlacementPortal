@@ -9,24 +9,96 @@
 </head>
 <body class="bg-gray-50">
   <main class="container mx-auto px-4 py-8">
-    <h1 class="text-2xl font-semibold mb-4">Your Profile</h1>
-    <form id="profileForm" class="bg-white shadow rounded p-6 max-w-xl">
-      <label class="block mb-2 text-sm">Name</label>
-      <input id="name" class="w-full border p-2 rounded mb-3" />
-      <label class="block mb-2 text-sm">Phone</label>
-      <input id="phone" class="w-full border p-2 rounded mb-3" />
-      <label class="block mb-2 text-sm">Branch</label>
-      <input id="branch" class="w-full border p-2 rounded mb-3" />
-      <label class="block mb-2 text-sm">CGPA</label>
-      <input id="cgpa" type="number" step="0.01" class="w-full border p-2 rounded mb-3" />
-      <label class="block mb-2 text-sm">Skills (comma separated)</label>
-      <input id="skills" class="w-full border p-2 rounded mb-3" />
-      <label class="block mb-2 text-sm">Resume (PDF)</label>
-      <input id="resume" type="file" accept="application/pdf" class="mb-4" />
-      <label class="block mb-2 text-sm">Profile Photo</label>
-      <input id="photo" type="file" accept="image/*" class="mb-4" />
-      <button id="saveBtn" class="bg-blue-600 text-white px-4 py-2 rounded">Save</button>
-    </form>
+    <div class="max-w-xl mx-auto bg-white shadow rounded-lg p-6 border border-gray-100">
+      <div class="flex justify-between items-center mb-6 pb-4 border-b border-gray-100">
+        <h1 class="text-2xl font-bold text-gray-800">Your Profile</h1>
+        <button id="editToggleBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg transition-colors focus:outline-none">Edit Profile</button>
+      </div>
+
+      <!-- Current Profile Details (View Mode) -->
+      <div id="profileView" class="space-y-6">
+        <div class="flex items-center space-x-4">
+          <div id="avatarContainer">
+            <!-- Profile Photo or Initial Initials -->
+          </div>
+          <div>
+            <h2 id="viewName" class="text-xl font-bold text-gray-800">Loading...</h2>
+            <p id="viewEmail" class="text-sm text-gray-500"></p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
+          <div>
+            <span class="block text-xs font-bold text-gray-400 uppercase tracking-wide">Phone</span>
+            <span id="viewPhone" class="text-sm text-gray-800 font-medium">N/A</span>
+          </div>
+          <div>
+            <span class="block text-xs font-bold text-gray-400 uppercase tracking-wide">Branch</span>
+            <span id="viewBranch" class="text-sm text-gray-800 font-medium">N/A</span>
+          </div>
+          <div>
+            <span class="block text-xs font-bold text-gray-400 uppercase tracking-wide">CGPA</span>
+            <span id="viewCgpa" class="text-sm text-gray-800 font-medium">N/A</span>
+          </div>
+          <div>
+            <span class="block text-xs font-bold text-gray-400 uppercase tracking-wide">Resume</span>
+            <span id="viewResume" class="text-sm font-medium">No resume uploaded</span>
+          </div>
+        </div>
+
+        <div class="pt-2">
+          <span class="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Skills</span>
+          <div id="viewSkills" class="flex flex-wrap gap-1.5">
+            <span class="text-xs text-gray-400 italic">No skills added yet</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Edit Form (Edit Mode - Hidden by default) -->
+      <form id="profileForm" class="hidden space-y-5">
+        <div>
+          <label class="block mb-1.5 text-sm font-semibold text-gray-700">Name</label>
+          <input id="name" required class="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none bg-white text-gray-900" />
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block mb-1.5 text-sm font-semibold text-gray-700">Phone</label>
+            <input id="phone" class="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none bg-white text-gray-900" />
+          </div>
+          <div>
+            <label class="block mb-1.5 text-sm font-semibold text-gray-700">Branch</label>
+            <input id="branch" class="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none bg-white text-gray-900" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block mb-1.5 text-sm font-semibold text-gray-700">CGPA</label>
+            <input id="cgpa" type="number" step="0.01" class="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none bg-white text-gray-900" />
+          </div>
+          <div>
+            <label class="block mb-1.5 text-sm font-semibold text-gray-700">Skills (comma separated)</label>
+            <input id="skills" class="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none bg-white text-gray-900" placeholder="e.g. Java, Python, SQL" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block mb-1.5 text-sm font-semibold text-gray-700">Upload Resume (PDF)</label>
+          <input id="resume" type="file" accept="application/pdf" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+        </div>
+
+        <div>
+          <label class="block mb-1.5 text-sm font-semibold text-gray-700">Profile Photo</label>
+          <input id="photo" type="file" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+        </div>
+
+        <div class="flex gap-3 pt-3 border-t border-gray-100">
+          <button type="submit" id="saveBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2.5 rounded-lg transition-colors focus:outline-none">Save Changes</button>
+          <button type="button" id="cancelBtn" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium px-4 py-2.5 rounded-lg transition-colors focus:outline-none">Cancel</button>
+        </div>
+      </form>
+    </div>
   </main>
 
   <script>
@@ -37,44 +109,155 @@
     import { apiGet, apiPost, apiPut } from '/js/api.js';
     renderNavbar('body');
 
-    document.addEventListener('DOMContentLoaded', async () => {
+    let profileData = null;
+
+    const editToggleBtn = document.getElementById('editToggleBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const profileView = document.getElementById('profileView');
+    const profileForm = document.getElementById('profileForm');
+
+    // UI elements for display mode
+    const avatarContainer = document.getElementById('avatarContainer');
+    const viewName = document.getElementById('viewName');
+    const viewEmail = document.getElementById('viewEmail');
+    const viewPhone = document.getElementById('viewPhone');
+    const viewBranch = document.getElementById('viewBranch');
+    const viewCgpa = document.getElementById('viewCgpa');
+    const viewResume = document.getElementById('viewResume');
+    const viewSkills = document.getElementById('viewSkills');
+
+    // Form inputs for edit mode
+    const nameInput = document.getElementById('name');
+    const phoneInput = document.getElementById('phone');
+    const branchInput = document.getElementById('branch');
+    const cgpaInput = document.getElementById('cgpa');
+    const skillsInput = document.getElementById('skills');
+
+    async function fetchProfile() {
       const profile = await apiGet('/student/profile');
       if (profile) {
-        document.getElementById('name').value = profile.name || '';
-        document.getElementById('phone').value = profile.phone || '';
-        document.getElementById('branch').value = profile.branch || '';
-        document.getElementById('cgpa').value = profile.cgpa || '';
-        document.getElementById('skills').value = (profile.skills || []).join(',');
+        profileData = profile;
+        displayProfile();
+      } else {
+        viewName.textContent = 'Error loading profile';
       }
+    }
+
+    function displayProfile() {
+      if (!profileData) return;
+
+      // 1. Populate View Mode
+      viewName.textContent = profileData.name || 'Anonymous Student';
+      viewEmail.textContent = profileData.email || '';
+      viewPhone.textContent = profileData.phone || 'N/A';
+      viewBranch.textContent = profileData.branch || 'N/A';
+      viewCgpa.textContent = profileData.cgpa || 'N/A';
+
+      // Profile photo / Initials Avatar
+      if (profileData.profileImage) {
+        avatarContainer.innerHTML = `<img src="${profileData.profileImage}" alt="${profileData.name}" class="w-16 h-16 rounded-full object-cover border border-gray-200" />`;
+      } else {
+        const initial = profileData.name ? profileData.name[0].toUpperCase() : 'S';
+        avatarContainer.innerHTML = `<div class="w-16 h-16 rounded-full bg-blue-50 text-blue-700 flex items-center justify-center font-bold text-2xl border border-gray-200">${initial}</div>`;
+      }
+
+      // Resume download link
+      if (profileData.resumeUrl) {
+        viewResume.innerHTML = `
+          <a href="${profileData.resumeUrl}" target="_blank" class="inline-flex items-center text-blue-600 hover:text-blue-800 hover:underline font-semibold">
+            <i class="fa-solid fa-file-pdf mr-1.5"></i>View Current Resume
+          </a>
+        `;
+      } else {
+        viewResume.textContent = 'No resume uploaded';
+      }
+
+      // Skills tags list
+      if (Array.isArray(profileData.skills) && profileData.skills.length > 0 && profileData.skills[0] !== '') {
+        viewSkills.innerHTML = profileData.skills
+          .map(s => `<span class="text-xs px-2.5 py-1 rounded-full bg-gray-100 text-gray-700 font-semibold">${s}</span>`)
+          .join('');
+      } else {
+        viewSkills.innerHTML = '<span class="text-xs text-gray-400 italic">No skills added yet</span>';
+      }
+
+      // 2. Populate Edit inputs
+      nameInput.value = profileData.name || '';
+      phoneInput.value = profileData.phone || '';
+      branchInput.value = profileData.branch || '';
+      cgpaInput.value = profileData.cgpa || '';
+      skillsInput.value = (profileData.skills || []).join(', ');
+    }
+
+    editToggleBtn.addEventListener('click', () => {
+      // Toggle to Edit Mode
+      profileView.classList.add('hidden');
+      profileForm.classList.remove('hidden');
+      editToggleBtn.classList.add('hidden');
     });
 
-    document.getElementById('profileForm').addEventListener('submit', async (e) => {
+    cancelBtn.addEventListener('click', () => {
+      // Reset inputs & toggle back to View Mode
+      displayProfile();
+      profileForm.classList.add('hidden');
+      profileView.classList.remove('hidden');
+      editToggleBtn.classList.remove('hidden');
+    });
+
+    profileForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const payload = {
-        name: document.getElementById('name').value,
-        phone: document.getElementById('phone').value,
-        branch: document.getElementById('branch').value,
-        cgpa: document.getElementById('cgpa').value,
-        skills: document.getElementById('skills').value.split(',').map(s => s.trim())
-      };
-      await apiPut('/student/profile', payload);
+      const saveBtn = document.getElementById('saveBtn');
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Saving...';
 
-      const resumeEl = document.getElementById('resume');
-      if (resumeEl.files.length) {
-        const form = new FormData();
-        form.append('resume', resumeEl.files[0]);
-        await apiPost('/student/upload-resume', form, true);
+      try {
+        const payload = {
+          name: nameInput.value,
+          phone: phoneInput.value,
+          branch: branchInput.value,
+          cgpa: cgpaInput.value ? parseFloat(cgpaInput.value) : null,
+          skills: skillsInput.value.split(',').map(s => s.trim()).filter(s => s !== '')
+        };
+
+        // Update profile
+        await apiPut('/student/profile', payload);
+
+        // Upload resume file if chosen
+        const resumeEl = document.getElementById('resume');
+        if (resumeEl.files.length) {
+          const form = new FormData();
+          form.append('resume', resumeEl.files[0]);
+          await apiPost('/student/upload-resume', form, true);
+        }
+
+        // Upload photo file if chosen
+        const photoEl = document.getElementById('photo');
+        if (photoEl.files.length) {
+          const form = new FormData();
+          form.append('photo', photoEl.files[0]);
+          await apiPost('/student/upload-photo', form, true);
+        }
+
+        showToast('Profile updated successfully');
+
+        // Reload updated profile data and toggle back
+        await fetchProfile();
+        profileForm.classList.add('hidden');
+        profileView.classList.remove('hidden');
+        editToggleBtn.classList.remove('hidden');
+
+        // Reset file inputs
+        resumeEl.value = '';
+        photoEl.value = '';
+      } catch (err) {
+        showToast('Error saving profile changes', 'error');
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save Changes';
       }
-
-      const photoEl = document.getElementById('photo');
-      if (photoEl.files.length) {
-        const form = new FormData();
-        form.append('photo', photoEl.files[0]);
-        await apiPost('/student/upload-photo', form, true);
-      }
-
-      showToast('Profile updated');
     });
+
+    document.addEventListener('DOMContentLoaded', fetchProfile);
   </script>
 </body>
 </html>
